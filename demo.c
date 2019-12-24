@@ -6,6 +6,8 @@
 #define HALF_SCREEN_SIZE 100
 #define RIGHT 1
 #define LEFT -1
+#define UP 0
+#define DOWN 2
 
 int max_y, max_x;
 
@@ -34,6 +36,7 @@ int main (int argc, char *argv[]){
     noecho();
     curs_set(FALSE);
     int ch = 0;
+    int last_direction = RIGHT;
 
     for (;;) {
         getmaxyx(stdscr, max_y, max_x);
@@ -42,17 +45,33 @@ int main (int argc, char *argv[]){
         refresh();
         usleep(DELAY);
 
+        // key press movements
         ch = getch();
         if(ch == KEY_UP) {
             circle.y -= circle.y_direction;
+            last_direction = UP;
         } else if (ch == KEY_RIGHT) {
             circle.x += circle.x_direction;
+            last_direction = RIGHT;
         } else if (ch == KEY_DOWN) {
             circle.y += circle.y_direction;
+            last_direction = DOWN;
         } else if(ch == KEY_LEFT) {
             circle.x -= circle.x_direction;
+            last_direction = LEFT;
         } else if (ch == KEY_BACKSPACE){
             exit(0);
+        } else {
+            // No key press
+            if(last_direction == UP) {
+                circle.y -= circle.y_direction;
+            } else if (last_direction == RIGHT) {
+                circle.x += circle.x_direction;
+            } else if (last_direction == DOWN) {
+                circle.y += circle.y_direction;
+            } else if (last_direction == LEFT) {
+                circle.x -= circle.x_direction;
+            }
         }
     }
 
