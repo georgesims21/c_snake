@@ -1,3 +1,9 @@
+/*
+ *TODO:
+ *    * Randomly create food inside box
+ *    * Print a longer snake depending on direction and size of the snake
+ */
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <ncurses.h>
@@ -20,59 +26,35 @@ typedef struct Object {
         x_direction;
 } Object;
 
+/*typedef struct Food {*/
+    /*const char *shape = 'o';*/
+    /*int x, y;*/
+/*} Food;*/
+
+void auto_move(int *last_direction, Object *circle);
+void change_direction(int ch, int *last_direction, Object *circle);
+WINDOW *init_screen(void);
+
 int main (int argc, char *argv[]){
 
+    int ch = 0, last_direction = RIGHT;
     getmaxyx(stdscr, max_y, max_x);
-    Object circle = {.shape = "o", .x = 0, .y = 0, .next_x = 0, 
+    Object circle = {.shape = "O", .x = 0, .y = 0, .next_x = 0, 
                     .next_y = 0, .y_direction = RIGHT, .x_direction = RIGHT};
-
-    Object cap_circle = {.shape = "O", .x = HALF_SCREEN_SIZE, .y = 0, .next_x = 0, 
-                        .next_y = 0, .y_direction = LEFT, .x_direction = LEFT};
-
-    initscr();
-    raw();
-    keypad(stdscr, TRUE);
-    nodelay(stdscr, TRUE);
-    noecho();
-    curs_set(FALSE);
-    int ch = 0;
-    int last_direction = RIGHT;
+    WINDOW *win = init_screen();
 
     for (;;) {
+        // Print snake head and refresh screen
         getmaxyx(stdscr, max_y, max_x);
         clear();
         mvprintw(circle.y, circle.x, circle.shape);
         refresh();
         usleep(DELAY);
 
-        // key press movements
+        // Handle movements
         ch = getch();
-        if(ch == KEY_UP) {
-            circle.y -= circle.y_direction;
-            last_direction = UP;
-        } else if (ch == KEY_RIGHT) {
-            circle.x += circle.x_direction;
-            last_direction = RIGHT;
-        } else if (ch == KEY_DOWN) {
-            circle.y += circle.y_direction;
-            last_direction = DOWN;
-        } else if(ch == KEY_LEFT) {
-            circle.x -= circle.x_direction;
-            last_direction = LEFT;
-        } else if (ch == KEY_BACKSPACE){
-            exit(0);
-        } else {
-            // No key press
-            if(last_direction == UP) {
-                circle.y -= circle.y_direction;
-            } else if (last_direction == RIGHT) {
-                circle.x += circle.x_direction;
-            } else if (last_direction == DOWN) {
-                circle.y += circle.y_direction;
-            } else if (last_direction == LEFT) {
-                circle.x -= circle.x_direction;
-            }
-        }
+        change_direction(ch, &last_direction, &circle);
+
     }
 
 
@@ -111,4 +93,53 @@ int main (int argc, char *argv[]){
     endwin();
 
     return 0;
+}
+
+void auto_move(int *last_direction, Object *circle) {
+
+    if(*last_direction == UP) {
+        circle->y -= circle->y_direction;
+    } else if (*last_direction == RIGHT) {
+        // Double to match speed of y axis
+        circle->x += 2*(circle->x_direction);
+    } else if (*last_direction == DOWN) {
+        circle->y += circle->y_direction;
+    } else if (*last_direction == LEFT) {
+        circle->x -= 2*(circle->x_direction);
+    }
+}
+
+void change_direction(int ch, int *last_direction, Object *circle) {
+
+    if(ch == KEY_UP) {
+        circle->y -= circle->y_direction;
+        *last_direction = UP;
+    } else if (ch == KEY_RIGHT) {
+        circle->x += circle->x_direction;
+        *last_direction = RIGHT;
+    } else if (ch == KEY_DOWN) {
+        circle->y += circle->y_direction;
+        *last_direction = DOWN;
+    } else if(ch == KEY_LEFT) {
+        circle->x -= circle->x_direction;
+        *last_direction = LEFT;
+    } else if (ch == KEY_BACKSPACE){
+        exit(0);
+    } else {
+        // No key press
+        auto_move(last_direction, circle);
+    }
+}
+
+WINDOW *init_screen(void) {
+
+    WINDOW *win = initscr();
+    raw();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+    noecho();
+    curs_set(FALSE);
+    wrefresh(win);
+
+    return win;
 }
