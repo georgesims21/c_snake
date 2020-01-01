@@ -30,26 +30,30 @@ typedef struct Food {
     int x, y;
 } Food;
 
-void auto_move(int *last_direction, Snake *head);
-void change_direction(int ch, int *last_direction, Snake *head);
+void auto_move(int *last_direction, int total, Snake *snake);
+void change_direction(int ch, int *last_direction, int total, Snake *snake);
+void move_body(int total, Snake *snake);
 WINDOW *init_screen(void);
 void random_food_generator(Food *food, int max_x, int max_y);
+void init_head(Snake *snake);
+void init_body(Snake *snake);
 
 int main (int argc, char *argv[]){
 
-    int ch = 0, last_direction = RIGHT, max_y = 0, max_x = 0, food_taken = 0;
+    int ch = 0, last_direction = RIGHT, max_y = 0, max_x = 0, food_taken = 1, total = 0;
     time_t t;
-    Snake body[MAX_SNAKE];
+    Snake snake[MAX_SNAKE];
+    init_head(snake);
+    init_body(snake);
+
     getmaxyx(stdscr, max_y, max_x);
 
-    Snake head = {.shape = "O", .x = 0, .y = 0, .next_x = 0, 
-                    .next_y = 0, .y_direction = RIGHT, .x_direction = RIGHT};
-    Food food = {.shape = "o", .x = 0, .y = 0};
+    Food food = {.shape = "x", .x = 0, .y = 0};
 
     WINDOW *win = init_screen();
 
     for (;;) {
-        // Print snake head and refresh screen
+        // Print snake snake[0] and refresh screen
         srand((unsigned) time(&t));
         getmaxyx(stdscr, max_y, max_x);
         clear();
@@ -57,55 +61,56 @@ int main (int argc, char *argv[]){
             random_food_generator(&food, max_x, max_y);
             food_taken = 0;
         }
-        mvprintw(head.y, head.x, head.shape);
+        mvprintw(snake[0].y, snake[0].x, snake[0].shape);
         mvprintw(food.y, food.x, food.shape);
-        if(head.y == food.y && head.x == food.x) {
+        mvprintw(0, 100, "Total: %d", total);
+
+        // Print snake
+        if(total > 0) {
+            for(int i = 1; i <= total; i++) {
+                mvprintw(snake[i].y, snake[i].x, snake[i].shape);
+            }
+        }
+
+        if(snake[0].y == food.y && snake[0].x == food.x) {
             food_taken = 1;
+            total++;
         }
         refresh();
         usleep(DELAY);
 
         // Handle movements
         ch = getch();
-        change_direction(ch, &last_direction, &head);
+        change_direction(ch, &last_direction, total, snake);
     }
-
-
-    //while(1){
-
-        // Get screen size each iteration
-     //   getmaxyx(stdscr, max_y, max_x);
-        // Clear current item(s) on screen
-      //  clear();
-       // if(ch = getch() == KEY_UP) {
-        //    mvprintw(head.y, head.x, head.shape);
-       // }
-        
-        //refresh();
-
-        //mvprintw(cap_head.y, cap_head.x, cap_head.shape);
-        //refresh();
-
-        //usleep(DELAY);
-        //head.next_x = head.x + head.x_direction;
-        //cap_head.next_x = cap_head.x + cap_head.x_direction;
-
-        //if(head.next_x >= max_x || head.next_x < 0) {
-        //    head.x_direction *= -1;
-        //} else {
-            //head.x += head.x_direction;
-        //}
-
-        //if(cap_head.next_x >= max_x || cap_head.next_x < 0) {
-            //cap_head.x_direction *= -1;
-        //} else {
-            //cap_head.x += cap_head.x_direction;
-        //}
-   // }
-
+        //if(snake[0].next_x >= max_x || snake[0].next_x < 0) {
     endwin();
 
     return 0;
+}
+
+void init_body(Snake *snake) {
+
+    for(int i = 1; i < MAX_SNAKE; i++) {
+        snake[i].shape = "o";
+        snake[i].x = 0;
+        snake[i].y = 0;
+        snake[i].next_x = 0;
+        snake[i].next_y = 0;
+        snake[i].x_direction = 3;
+        snake[i].y_direction = 3;
+    }
+}
+
+void init_head(Snake *snake){
+
+    snake[0].shape = "O";
+    snake[0].x = 0;
+    snake[0].y = 0;
+    snake[0].next_x = 0;
+    snake[0].next_y = 0;
+    snake[0].x_direction = RIGHT;
+    snake[0].y_direction = RIGHT;
 }
 
 void random_food_generator(Food *food, int max_x, int max_y) {
@@ -114,39 +119,54 @@ void random_food_generator(Food *food, int max_x, int max_y) {
         food->y = (rand() % max_y);
 }
 
-void auto_move(int *last_direction, Snake *head) {
+void move_body(int total, Snake *snake) {
 
-    if(*last_direction == UP) {
-        head->y -= head->y_direction;
-    } else if (*last_direction == RIGHT) {
-        // Double to match speed of y axis
-        head->x += 2*(head->x_direction);
-    } else if (*last_direction == DOWN) {
-        head->y += head->y_direction;
-    } else if (*last_direction == LEFT) {
-        head->x -= 2*(head->x_direction);
+    for(int i = 1; i <= total; i++) {
+
+        snake[i].x = snake[i-1].x;
+        snake[i].y = snake[i-1].y;
     }
 }
 
-void change_direction(int ch, int *last_direction, Snake *head) {
+void auto_move(int *last_direction, int total, Snake *snake) {
+
+    move_body(total, snake);
+
+    if(*last_direction == UP) {
+        snake[0].y -= snake[0].y_direction;
+    } else if (*last_direction == RIGHT) {
+        // Double to match speed of y axis
+        snake[0].x += 2*(snake[0].x_direction);
+    } else if (*last_direction == DOWN) {
+        snake[0].y += snake[0].y_direction;
+    } else if (*last_direction == LEFT) {
+        snake[0].x -= 2*(snake[0].x_direction);
+    }
+
+}
+
+void change_direction(int ch, int *last_direction, int total, Snake *snake) {
+
+    move_body(total, snake);
 
     if(ch == KEY_UP) {
-        head->y -= head->y_direction;
+        snake[0].y -= snake[0].y_direction;
         *last_direction = UP;
     } else if (ch == KEY_RIGHT) {
-        head->x += head->x_direction;
+        snake[0].x += snake[0].x_direction;
         *last_direction = RIGHT;
     } else if (ch == KEY_DOWN) {
-        head->y += head->y_direction;
+        snake[0].y += snake[0].y_direction;
         *last_direction = DOWN;
     } else if(ch == KEY_LEFT) {
-        head->x -= head->x_direction;
+        snake[0].x -= snake[0].x_direction;
         *last_direction = LEFT;
     } else if (ch == KEY_BACKSPACE){
+        endwin();
         exit(0);
     } else {
         // No key press
-        auto_move(last_direction, head);
+        auto_move(last_direction, total, snake);
     }
 }
 
