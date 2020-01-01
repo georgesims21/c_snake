@@ -9,7 +9,7 @@
 #include <ncurses.h>
 #include <time.h>
 
-#define DELAY 60000
+#define DELAY 90000
 #define MAX_SNAKE 100
 #define RIGHT 1
 #define LEFT -1
@@ -65,16 +65,13 @@ int main (int argc, char *argv[]){
             random_food_generator(&food, max_x, max_y);
             food_taken = 0;
         }
-        mvprintw(snake[0].y, snake[0].x, snake[0].shape);
+        // Print snake
+        for(int i = 0; i <= total; i++) {
+            mvprintw(snake[i].y, snake[i].x, snake[i].shape);
+        }
         mvprintw(food.y, food.x, food.shape);
         mvprintw(0, 46, "Total: %d", total);
 
-        // Print snake
-        if(total > 0) {
-            for(int i = 1; i <= total; i++) {
-                mvprintw(snake[i].y, snake[i].x, snake[i].shape);
-            }
-        }
 
         if(snake[0].y == food.y && snake[0].x == food.x) {
             food_taken = 1;
@@ -85,7 +82,7 @@ int main (int argc, char *argv[]){
             clear();
             print_border();
             mvprintw(25, 40, "GAME OVER");
-            mvprintw(26, 40, "Press enter to exit");
+            mvprintw(26, 40, "Press backspace to exit");
             for(;;) {
                 ch = getch();
                 if(ch == KEY_BACKSPACE) {
@@ -102,7 +99,6 @@ int main (int argc, char *argv[]){
         ch = getch();
         change_direction(ch, &last_direction, total, snake);
     }
-        //if(snake[0].next_x >= max_x || snake[0].next_x < 0) {
     endwin();
 
     return 0;
@@ -174,8 +170,6 @@ void move_body(int total, Snake *snake) {
 }
 
 void auto_move(int *last_direction, int total, Snake *snake) {
-
-    move_body(total, snake);
 
     if(*last_direction == UP) {
         snake[0].y -= snake[0].y_direction;
