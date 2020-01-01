@@ -21,6 +21,8 @@ typedef struct Snake {
     int x, y,
         next_x,
         next_y,
+        prev_x,
+        prev_y,
         y_direction,
         x_direction;
 } Snake;
@@ -77,17 +79,20 @@ int main (int argc, char *argv[]){
         if(snake[0].y == food.y && snake[0].x == food.x) {
             food_taken = 1;
             total++;
-        } else if (snake[0].y == 0 || snake[0].y == 50  || \
-                    snake[0].x == 0 || snake[0].x == 100) {
+        } else if (snake[0].y == 1 || snake[0].y == 49  || \
+                    snake[0].x == 1 || snake[0].x == 98) {
 
-
-                clear();
-                mvprintw(25, 50, "GAME OVER\nPress enter to continue");
+            clear();
+            print_border();
+            mvprintw(25, 40, "GAME OVER");
+            mvprintw(26, 40, "Press enter to exit");
+            for(;;) {
                 ch = getch();
-                if(ch == KEY_ENTER) {
-                    break;
+                if(ch == KEY_BACKSPACE) {
+                    endwin();
+                    exit(0);
                 }
-
+            }
         }
         
         refresh();
@@ -127,6 +132,8 @@ void init_body(Snake *snake) {
         snake[i].y = 0;
         snake[i].next_x = 0;
         snake[i].next_y = 0;
+        snake[i].prev_x = 0;
+        snake[i].prev_y = 0;
         snake[i].x_direction = 3;
         snake[i].y_direction = 3;
     }
@@ -135,26 +142,34 @@ void init_body(Snake *snake) {
 void init_head(Snake *snake){
 
     snake[0].shape = "O";
-    snake[0].x = 1;
+    snake[0].x = 2;
     snake[0].y = 2;
     snake[0].next_x = 0;
     snake[0].next_y = 0;
+    snake[0].prev_x = 0;
+    snake[0].prev_y = 0;
     snake[0].x_direction = RIGHT;
     snake[0].y_direction = RIGHT;
 }
 
 void random_food_generator(Food *food, int max_x, int max_y) {
 
-        food->x = (rand() % max_x/2);
-        food->y = (rand() % max_y/2);
+        food->x = ((rand() % 95) + 2);
+        food->y = ((rand() % 42) + 2);
 }
 
 void move_body(int total, Snake *snake) {
 
-    for(int i = 1; i <= total; i++) {
+    snake[1].prev_x = snake[1].x;
+    snake[1].prev_y = snake[1].y;
+    snake[1].x = snake[0].x;
+    snake[1].y = snake[0].y;
+    for(int i = 2; i <= total; i++) {
 
-        snake[i].x = snake[i-1].x;
-        snake[i].y = snake[i-1].y;
+        snake[i].prev_x = snake[i].x;
+        snake[i].prev_y = snake[i].y;
+        snake[i].x = snake[i-1].prev_x;
+        snake[i].y = snake[i-1].prev_y;
     }
 }
 
