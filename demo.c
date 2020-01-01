@@ -37,6 +37,7 @@ WINDOW *init_screen(void);
 void random_food_generator(Food *food, int max_x, int max_y);
 void init_head(Snake *snake);
 void init_body(Snake *snake);
+void print_border(void);
 
 int main (int argc, char *argv[]){
 
@@ -57,13 +58,14 @@ int main (int argc, char *argv[]){
         srand((unsigned) time(&t));
         getmaxyx(stdscr, max_y, max_x);
         clear();
+        print_border();
         if(food_taken) {
             random_food_generator(&food, max_x, max_y);
             food_taken = 0;
         }
         mvprintw(snake[0].y, snake[0].x, snake[0].shape);
         mvprintw(food.y, food.x, food.shape);
-        mvprintw(0, 100, "Total: %d", total);
+        mvprintw(0, 46, "Total: %d", total);
 
         // Print snake
         if(total > 0) {
@@ -75,7 +77,19 @@ int main (int argc, char *argv[]){
         if(snake[0].y == food.y && snake[0].x == food.x) {
             food_taken = 1;
             total++;
+        } else if (snake[0].y == 0 || snake[0].y == 50  || \
+                    snake[0].x == 0 || snake[0].x == 100) {
+
+
+                clear();
+                mvprintw(25, 50, "GAME OVER\nPress enter to continue");
+                ch = getch();
+                if(ch == KEY_ENTER) {
+                    break;
+                }
+
         }
+        
         refresh();
         usleep(DELAY);
 
@@ -87,6 +101,22 @@ int main (int argc, char *argv[]){
     endwin();
 
     return 0;
+}
+
+void print_border(void) {
+
+        mvprintw(1, 1, "+");
+        mvprintw(49, 1, "+");
+        mvprintw(1, 99, "+");
+        mvprintw(49, 99, "+");
+        for(int i = 2; i <= 48; i++) {
+            mvprintw(i, 1, "|");
+            mvprintw(i, 99, "|");
+        }
+        for(int i = 2; i <= 98; i++) {
+            mvprintw(1, i, "-");
+            mvprintw(49, i, "-");
+        }
 }
 
 void init_body(Snake *snake) {
@@ -105,8 +135,8 @@ void init_body(Snake *snake) {
 void init_head(Snake *snake){
 
     snake[0].shape = "O";
-    snake[0].x = 0;
-    snake[0].y = 0;
+    snake[0].x = 1;
+    snake[0].y = 2;
     snake[0].next_x = 0;
     snake[0].next_y = 0;
     snake[0].x_direction = RIGHT;
@@ -115,8 +145,8 @@ void init_head(Snake *snake){
 
 void random_food_generator(Food *food, int max_x, int max_y) {
 
-        food->x = (rand() % max_x);
-        food->y = (rand() % max_y);
+        food->x = (rand() % max_x/2);
+        food->y = (rand() % max_y/2);
 }
 
 void move_body(int total, Snake *snake) {
