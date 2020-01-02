@@ -43,20 +43,37 @@ void init_head(Snake *snake);
 void init_body(Snake *snake);
 void print_border(void);
 void game_loop(int delay, int max_x, int max_y);
+void menu_screen(void);
 
 int main (int argc, char *argv[]){
 
-    int max_x, max_y;
+    int max_x = 0, max_y = 0, ch = 0;
     getmaxyx(stdscr, max_y, max_x);
     WINDOW *win = init_screen();
+    getmaxyx(stdscr, max_y, max_x);
+    clear();
 
     for(;;){
-    
-        game_loop(90000, max_x, max_y);
+        menu_screen();
+        ch = getch();
+        if(ch == KEY_UP) {
+            // EASY
+            game_loop(120000, max_x, max_y);
+        } else if (ch == KEY_RIGHT) {
+            // MED
+            game_loop(90000, max_x, max_y);
+        } else if (ch == KEY_DOWN) {
+            // HARD
+            game_loop(30000, max_x, max_y);
+        } else if (ch == KEY_BACKSPACE) {
+            // EXIT
+            clear();
+            endwin();
+            exit(0);
+        }
     }
 
     endwin();
-
     return 0;
 }
 
@@ -137,7 +154,6 @@ void auto_move(int *last_direction, int total, Snake *snake) {
     } else if (*last_direction == LEFT) {
         snake[0].x -= 2*(snake[0].x_direction);
     }
-
 }
 
 void change_direction(int ch, int *last_direction, int total, Snake *snake) {
@@ -145,17 +161,29 @@ void change_direction(int ch, int *last_direction, int total, Snake *snake) {
     move_body(total, snake);
 
     if(ch == KEY_UP) {
-        snake[0].y -= snake[0].y_direction;
-        *last_direction = UP;
+        if(*last_direction != DOWN) {
+            snake[0].y -= snake[0].y_direction;
+            *last_direction = UP;
+        }
+        auto_move(last_direction, total, snake);
     } else if (ch == KEY_RIGHT) {
-        snake[0].x += snake[0].x_direction;
-        *last_direction = RIGHT;
+        if(*last_direction != LEFT) {
+            snake[0].x += snake[0].x_direction;
+            *last_direction = RIGHT;
+        }
+        auto_move(last_direction, total, snake);
     } else if (ch == KEY_DOWN) {
-        snake[0].y += snake[0].y_direction;
-        *last_direction = DOWN;
+        if(*last_direction != UP) {
+            snake[0].y += snake[0].y_direction;
+            *last_direction = DOWN;
+        }
+        auto_move(last_direction, total, snake);
     } else if(ch == KEY_LEFT) {
-        snake[0].x -= snake[0].x_direction;
-        *last_direction = LEFT;
+        if(*last_direction != RIGHT) {
+            snake[0].x -= snake[0].x_direction;
+            *last_direction = LEFT;
+        }
+        auto_move(last_direction, total, snake);
     } else if (ch == KEY_BACKSPACE){
         endwin();
         exit(0);
@@ -211,11 +239,21 @@ void game_loop(int delay, int max_x, int max_y) {
         }
         
         refresh();
-        usleep(DELAY);
+        usleep(delay);
         // Handle movements
         ch = getch();
         change_direction(ch, &last_direction, total, snake);
     }
+}
+
+void menu_screen(void) {
+
+    print_border();
+    mvprintw(25,35, "Welcome to snake!");
+    mvprintw(26,35, "Press the up arrow for EASY");
+    mvprintw(27,35, "Press the right arrow for MEDIUM");
+    mvprintw(28,35, "Press the down arrow for HARD");
+    mvprintw(29,35, "Press backspace to exit");
 }
 
 WINDOW *init_screen(void) {
