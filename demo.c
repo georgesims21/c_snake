@@ -1,7 +1,10 @@
 /*
  *TODO:
- *    * Print a longer snake depending on direction and size of the snake
- *      - Each node must follow the next node, like a linked list. Copies node infront's direction and next x and y.
+ * Head cannot touch the body x's or y's
+ * If going left can't go right, if going right can't go left... etc
+ * Make all ints a percentage of the max screen size instead
+ * Why doesn't the head register on certain food/borders?
+ * Make main loop into method, then make menu choosing difficulty at start then run loop with DELAY as parameter
  */
 
 #include <stdlib.h>
@@ -9,7 +12,6 @@
 #include <ncurses.h>
 #include <time.h>
 
-#define DELAY 90000
 #define MAX_SNAKE 100
 #define RIGHT 1
 #define LEFT -1
@@ -40,65 +42,19 @@ void random_food_generator(Food *food, int max_x, int max_y);
 void init_head(Snake *snake);
 void init_body(Snake *snake);
 void print_border(void);
+void game_loop(int delay, int max_x, int max_y);
 
 int main (int argc, char *argv[]){
 
-    int ch = 0, last_direction = RIGHT, max_y = 0, max_x = 0, food_taken = 1, total = 0;
-    time_t t;
-    Snake snake[MAX_SNAKE];
-    init_head(snake);
-    init_body(snake);
-
+    int max_x, max_y;
     getmaxyx(stdscr, max_y, max_x);
-
-    Food food = {.shape = "x", .x = 0, .y = 0};
-
     WINDOW *win = init_screen();
 
-    for (;;) {
-        // Print snake snake[0] and refresh screen
-        srand((unsigned) time(&t));
-        getmaxyx(stdscr, max_y, max_x);
-        clear();
-        print_border();
-        if(food_taken) {
-            random_food_generator(&food, max_x, max_y);
-            food_taken = 0;
-        }
-        // Print snake
-        for(int i = 0; i <= total; i++) {
-            mvprintw(snake[i].y, snake[i].x, snake[i].shape);
-        }
-        mvprintw(food.y, food.x, food.shape);
-        mvprintw(0, 46, "Total: %d", total);
-
-
-        if(snake[0].y == food.y && snake[0].x == food.x) {
-            food_taken = 1;
-            total++;
-        } else if (snake[0].y == 1 || snake[0].y == 49  || \
-                    snake[0].x == 1 || snake[0].x == 98) {
-
-            clear();
-            print_border();
-            mvprintw(25, 40, "GAME OVER");
-            mvprintw(26, 40, "Press backspace to exit");
-            for(;;) {
-                ch = getch();
-                if(ch == KEY_BACKSPACE) {
-                    endwin();
-                    exit(0);
-                }
-            }
-        }
-        
-        refresh();
-        usleep(DELAY);
-
-        // Handle movements
-        ch = getch();
-        change_direction(ch, &last_direction, total, snake);
+    for(;;){
+    
+        game_loop(90000, max_x, max_y);
     }
+
     endwin();
 
     return 0;
@@ -206,6 +162,59 @@ void change_direction(int ch, int *last_direction, int total, Snake *snake) {
     } else {
         // No key press
         auto_move(last_direction, total, snake);
+    }
+}
+
+void game_loop(int delay, int max_x, int max_y) {
+
+    int ch = 0, last_direction = RIGHT, 
+            food_taken = 1, total = 0;
+    time_t t;
+    Snake snake[MAX_SNAKE];
+    init_head(snake);
+    init_body(snake);
+    Food food = {.shape = "x", .x = 0, .y = 0};
+    
+    for (;;) {
+        // Print snake snake[0] and refresh screen
+        srand((unsigned) time(&t));
+        getmaxyx(stdscr, max_y, max_x);
+        clear();
+        print_border();
+        if(food_taken) {
+            random_food_generator(&food, max_x, max_y);
+            food_taken = 0;
+        }
+        // Print snake
+        for(int i = 0; i <= total; i++) {
+            mvprintw(snake[i].y, snake[i].x, snake[i].shape);
+        }
+        mvprintw(food.y, food.x, food.shape);
+        mvprintw(0, 46, "Total: %d", total);
+
+        if(snake[0].y == food.y && snake[0].x == food.x) {
+            food_taken = 1;
+            total++;
+        } else if (snake[0].y == 1 || snake[0].y == 49  || \
+                    snake[0].x == 1 || snake[0].x == 98) {
+
+            clear();
+            print_border();
+            mvprintw(25, 40, "GAME OVER");
+            mvprintw(26, 40, "Press backspace to restart");
+            for(;;) {
+                ch = getch();
+                if(ch == KEY_BACKSPACE) {
+                    return;
+                }
+            }
+        }
+        
+        refresh();
+        usleep(DELAY);
+        // Handle movements
+        ch = getch();
+        change_direction(ch, &last_direction, total, snake);
     }
 }
 
