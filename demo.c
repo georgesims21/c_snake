@@ -1,9 +1,8 @@
 /*
  *TODO:
  * Head cannot touch the body x's or y's
- * If going left can't go right, if going right can't go left... etc
- * Make all ints a percentage of the max screen size instead
  * Why doesn't the head register on certain food/borders?
+ * Pressing backspace on game over screen doesn't go back to main menu loop
  */
 
 #include <stdlib.h>
@@ -129,7 +128,6 @@ void move_body(int total, Snake *snake) {
     snake[1].x = snake[0].x;
     snake[1].y = snake[0].y;
     for(int i = 2; i <= total; i++) {
-
         snake[i].prev_x = snake[i].x;
         snake[i].prev_y = snake[i].y;
         snake[i].x = snake[i-1].prev_x;
@@ -197,7 +195,6 @@ void game_loop(int delay) {
     for (;;) {
         // Print snake snake[0] and refresh screen
         srand((unsigned) time(&t));
-        getmaxyx(stdscr, max_y, max_x);
         clear();
         print_border();
         if(food_taken) {
@@ -246,8 +243,8 @@ int game_over(void) {
     int ch;
     clear();
     print_border();
-    mvprintw((max_y * 0.35), (max_x / 2), "GAME OVER");
-    mvprintw((max_y * 0.35) + 1, (max_x/2), "Press backspace to restart");
+    mvprintw((max_y * 0.35), (max_x * 0.25), "GAME OVER");
+    mvprintw((max_y * 0.35) + 1, (max_x * 0.25), "Press backspace to restart");
     for(;;) {
         ch = getch();
         if(ch == KEY_BACKSPACE) {
