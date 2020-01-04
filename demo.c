@@ -56,8 +56,14 @@ int main (int argc, char *argv[]){
     for(;;){
         getmaxyx(stdscr, max_y_tmp, max_x_tmp);
         // Good box:screen ratio
-        max_x = max_x_tmp * 0.7; max_y = max_y_tmp * 0.7;
-        menu_screen();
+        max_x_tmp *= 0.7; max_y_tmp *= 0.7;
+        if(max_x_tmp != max_x || max_y_tmp != max_y) {
+            // Screen is resized
+            clear();
+            max_x = max_x_tmp;
+            max_y = max_y_tmp;
+            menu_screen();
+        }
         ch = getch();
         if(ch == KEY_UP) {
             // EASY
